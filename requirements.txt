@@ -1,0 +1,13 @@
+# PDF 수학 문제집 단원별 정리를 위한 Python 라이브러리
+# 다음 중 하나를 선택하여 설치하세요 (권장: pdfplumber)
+
+# 옵션 1: pdfplumber (권장 - 텍스트 추출 정확도 높음)
+pdfplumber>=0.10.0
+
+# 옵션 2: PyPDF2 (가벼움, PDF 분할에 사용)
+PyPDF2>=3.0.0
+
+# 옵션 3: PyMuPDF (fitz) (가장 빠름, 이미지 추출 가능, PDF 분할 대안)
+# pymupdf>=1.23.0
+
+# PDF 정리 및 분할 도구 (organize_pdf.py)는 PyPDF2 또는 pymupdf 필요

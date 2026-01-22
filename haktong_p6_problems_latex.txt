@@ -1,0 +1,175 @@
+% This LaTeX document needs to be compiled with XeLaTeX.
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[version=4]{mhchem}
+\usepackage{stmaryrd}
+\usepackage[fallback]{xeCJK}
+\usepackage{polyglossia}
+\usepackage{fontspec}
+\IfFontExistsTF{Noto Serif CJK KR}
+{\setCJKmainfont{Noto Serif CJK KR}}
+{\IfFontExistsTF{Apple SD Gothic Neo}
+  {\setCJKmainfont{Apple SD Gothic Neo}}
+  {\IfFontExistsTF{UnDotum}
+    {\setCJKmainfont{UnDotum}}
+    {\setCJKmainfont{Malgun Gothic}}
+}}
+
+\setmainlanguage{english}
+\IfFontExistsTF{CMU Serif}
+{\setmainfont{CMU Serif}}
+{\IfFontExistsTF{DejaVu Sans}
+  {\setmainfont{DejaVu Sans}}
+  {\setmainfont{Georgia}}
+}
+
+\begin{document}
+\section*{Chapter 3}
+통계
+
+이산확률변수 $X$ 가 가지는 값이 1 부터 4 까지의 자연수이고, 확률변수 $X$ 는 다음 조건을 만족시킨다.\\
+(가) $\mathrm{P}(X=1)=\frac{1}{2}$\\
+(나) $\mathrm{P}(X>n+1)=\{\mathrm{P}(X>n)\}^{2}(n=1,2)$\\
+$\mathrm{E}(X)$ 의 값은? [4점]\\
+(1) $\frac{13}{8}$\\
+(2) $\frac{27}{16}$\\
+(3) $\frac{7}{4}$\\
+(4) $\frac{29}{16}$\\
+(5) $\frac{15}{8}$
+
+\section*{Chapter 3 \\
+ 통계}
+(13)
+
+이산확률변수 $X$ 의 확률질량함수가
+
+$$
+\mathrm{P}\left(X=a_{i}\right)=p_{i}(i=1,2,3)
+$$
+
+이고, $a_{i}$ 가 다음 조건을 만족시킨다.\\
+(가) $a_{1}+p_{1}=\frac{5}{4}$\\
+(나) 세 수 $a_{1}, a_{2}, a_{3}$ 은 이 순서대로 공차가 2 인 등차수열을 이룬다.\\
+$\mathrm{E}(X)=a_{2}$ 이고 $\mathrm{V}(X)=2$ 일 때, $\mathrm{E}\left(X^{2}\right)$ 의 값은? [4점]\\
+(1) 8\\
+(2) 9\\
+(3) 10\\
+(4) 11\\
+(5) 12
+
+\section*{Chapter 3 \\
+ 통계}
+10 개의 서로 다른 양수 $a_{1}, a_{2}, \cdots, a_{10}$ 에 대하여 이차방정식
+
+$$
+x^{2}-x-a_{k}=0(k=1,2, \cdots, 10)
+$$
+
+의 두 실근을 $x_{2 k-1}, x_{2 k}$ 라 하자. 이산확률변수 $X$ 가 갖는 값이 $x_{1}, x_{2}, x_{3}, x_{4}, \cdots, x_{20}$ 이고, 20 이하의 임의의 두 자연수 $m, n$ 에 대하여 $\mathrm{P}\left(X=x_{m}\right)=\mathrm{P}\left(X=x_{n}\right)$ 이다. $\sum_{k=1}^{10} a_{k}=10$ 일 때, $\mathrm{V}(X)$ 의 값은? [4점]\\
+(1) $\frac{3}{4}$\\
+(2) $\frac{7}{8}$\\
+(3) 1\\
+(4) $\frac{9}{8}$\\
+(5) $\frac{5}{4}$
+
+\section*{Chapter 3 \\
+ 통계}
+\section*{(15)}
+숫자 $1,1,1,1,2$ 가 하나씩 적혀 있는 5 개의 공이 들어 있는 주머니가 있다. 이 주머니에서 임의로 3 개의 공을 동시에 꺼내어 공에 적혀 있는 세 수를 확인한 후, 3 개의 공을 다시 주머니에 넣는 시행을 한다. 이 시행을 25 번 반복하여 확인한 75 개의 수의 합을 확률변수 $X$ 라 하자. $\mathrm{E}\left(X^{2}\right)$ 의 값은? [4점]\\
+(1) 8094\\
+(2) 8097\\
+(3) 8100\\
+(4) 8103\\
+(5) 8106
+
+\section*{Chapter 3 \\
+ 통계}
+\section*{06}
+50 개의 공과 비어 있는 주머니가 있다. 한 개의 주사위를 사용하여 다음 규칙에 따라 공을 주머니에 넣는 시행을 한다.\\
+(가) 첫 번째 시행에서 주사위를 한 번 던져서 나온 눈의 수가 6 이면 공 1 개를 주머니에 넣고, 6 이 아니면 공 2 개를 주머니에 넣는다.\\
+(나) $n(n \geq 2)$ 번째 시행에서 주사위를 한 번 던져서 나온 눈의 수가 6 이면 공 1 개를 주머니에 넣고, 6 이 아니면 첫 번째 시행에서 주머니에 넣은 공의 개수와 같은 개수의 공을 주머니에 넣는다.
+
+25 번째 시행 후 주머니에 들어 있는 공의 개수를 확률변수 $X$ 라 할 때, $\mathrm{E}(2 X)$ 의 값을 구하시오. [4점]
+
+\section*{Chapter 3 \\
+ 통계}
+$a>\frac{5}{3}$ 인 실수 $a$ 에 대하여 연속확률변수 $X$ 가 갖는 값의 범위는 $0 \leq X \leq a$ 이고, 연속확률변수 $Y$ 가 갖는 값의 범위는 $0 \leq Y \leq 1$ 이다. 상수 $k$ 와 일차함수 $h(x)$ 에 대하여 확률변수 $X$ 의 확률밀도함수 $f(x)$ 는
+
+$$
+f(x)= \begin{cases}k x & \left(0 \leq x<\frac{2}{3}\right) \\ h(x) & \left(\frac{2}{3} \leq x \leq \frac{4}{3}\right) \\ k(x-a)+1 & \left(\frac{4}{3}<x \leq a\right)\end{cases}
+$$
+
+이고, 확률변수 $Y$ 의 확률밀도함수 $g(x)$ 는 $f(x)$ 의 역함수이다. 함수 $f(x)$ 가 닫힌구간 $[0, a]$ 에서 연속 이고, $\mathrm{P}\left(f\left(\frac{1}{3}\right) \leq Y \leq f\left(\frac{5}{3}\right)\right)=\frac{7}{9}$ 일 때, $f\left(\frac{5 k}{a}\right)=\frac{q}{p}$ 이다. $p+q$ 의 값을 구하시오.\\
+(단, $p$ 와 $q$ 는 서로소인 자연수이다.) [4점]
+
+\section*{Chapter 3 \\
+ 통계}
+확률변수 $X$ 는 정규분포 $\mathrm{N}\left(10,2^{2}\right)$ 을 따르고, $m>10$ 인 상수 $m$ 에 대하여 확률변수 $Y$ 는 정규분포 $\mathrm{N}\left(m, 2^{2}\right)$ 을 따른다.\\
+실수 $k$ 에 대하여 함수 $f(k)$ 를
+
+$$
+f(k)=\mathrm{P}(X \leq k)+\mathrm{P}(Y \geq k)
+$$
+
+라 하자. 함수 $f(k)$ 의 최댓값이 1.6826 일 때, $\mathrm{P}(13 \leq Y \leq 16)$ 의 값을 오른쪽 표준정규분포표를 이용하여 구한 것은? [4점]
+
+\begin{center}
+\begin{tabular}{c|c}
+\hline
+$z$ & $\mathrm{P}(0 \leq Z \leq z)$ \\
+\hline
+0.5 & 0.1915 \\
+\hline
+1.0 & 0.3413 \\
+\hline
+1.5 & 0.4332 \\
+\hline
+2.0 & 0.4772 \\
+\hline
+\end{tabular}
+\end{center}
+
+(1) 0.2857\\
+(2) 0.4332\\
+(3) 0.5328\\
+(4) 0.6247\\
+(5) 0.7745
+
+\section*{Chapter 3}
+\section*{통계}
+정규분포를 따르고 표준편차가 2 인 두 확률변수 $X, Y$ 에 대하여 실수 전체의 집합에서 연속인 함수\\
+$f(x)$ 가
+
+$$
+f(x)= \begin{cases}\mathrm{P}(X \leq x) & (x<1) \\ \mathrm{P}(Y \geq x+2) & (x \geq 1)\end{cases}
+$$
+
+이다. $f(4)+\mathrm{P}(Y \geq 2)=1$ 일 때, $f(-2)$ 의 값을 오른쪽 표준정규분포표를 이용하여 구한 것은? [4점]
+
+\begin{center}
+\begin{tabular}{c|c}
+\hline
+$z$ & $\mathrm{P}(0 \leq Z \leq z)$ \\
+\hline
+0.5 & 0.1915 \\
+\hline
+1.0 & 0.3413 \\
+\hline
+1.5 & 0.4332 \\
+\hline
+2.0 & 0.4772 \\
+\hline
+\end{tabular}
+\end{center}
+
+(1) 0.0228\\
+(2) 0.0668\\
+(3) 0.1587\\
+(4) 0.2857\\
+(5) 0.3085
+
+
+\end{document}

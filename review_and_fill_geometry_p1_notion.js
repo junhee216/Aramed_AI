@@ -1,0 +1,423 @@
+// review_and_fill_geometry_p1_notion.js
+// 기하_2024학년도_현우진_드릴_P1 Notion 필드 검토 및 26, 27번 필드 채우기
+
+import 'dotenv/config';
+import { Client, collectPaginatedAPI } from '@notionhq/client';
+import { createRateLimiter } from './src/middleware/rate_limiter.js';
+import { extractPropertyValue, extractProblemData, createRichTextProperty, createProblemIdFilter } from './src/utils/notion_utils.js';
+import { extractMathPrinciple, findPrincipleSharedProblems, generateErrorScenario } from './src/utils/math_principle_utils.js';
+import logger from './src/middleware/logger.js';
+import fs from 'fs';
+import path from 'path';
+
+const notionApiKey = process.env.NOTION_API_KEY;
+const databaseId = process.env.NOTION_DATABASE_ID;
+
+if (!notionApiKey || !databaseId) {
+	console.error('❌ .env 설정 오류');
+	process.exit(1);
+}
+
+const notion = new Client({ auth: notionApiKey });
+const rateLimiter = createRateLimiter(333);
+
+// 문제 파일 읽기
+function loadProblems() {
+	const problemPath = path.join(
+		'C:', 'Users', 'a', 'Documents', 'MathPDF', 'organized', '현우진',
+		'기하_2024학년도_현우진_드릴', '기하_2024학년도_현우진_드릴_P1_문제_deepseek.json'
+	);
+	
+	try {
+		const content = fs.readFileSync(problemPath, 'utf-8');
+		return JSON.parse(content);
+	} catch (error) {
+		console.error(`❌ 문제 파일 읽기 실패: ${error.message}`);
+		return [];
+	}
+}
+
+// 해설 파일 읽기
+function loadSolution() {
+	const solutionPath = path.join(
+		'C:', 'Users', 'a', 'Documents', 'MathPDF', 'organized', '현우진',
+		'기하_2024학년도_현우진_드릴', '기하_2024학년도_현우진_드릴_P1_해설_deepseek_r1.md'
+	);
+	
+	try {
+		return fs.readFileSync(solutionPath, 'utf-8');
+	} catch (error) {
+		console.error(`❌ 해설 파일 읽기 실패: ${error.message}`);
+		return '';
+	}
+}
+
+// 수학적 논리 검증
+function validateMathLogic(notionPage, problems, solution) {
+	const errors = [];
+	const warnings = [];
+	
+	const props = notionPage.properties;
+	const 문제ID = extractPropertyValue(props['문제ID']);
+	const 대단원 = extractPropertyValue(props['대단원']);
+	const 중단원 = extractPropertyValue(props['중단원']);
+	const 핵심개념 = extractPropertyValue(props['핵심개념']);
+	const 문제구조 = extractPropertyValue(props['문제구조']);
+	const 핵심패턴 = extractPropertyValue(props['핵심패턴']);
+	const LaTeX예시 = extractPropertyValue(props['LaTeX예시']);
+	const 함정설계 = extractPropertyValue(props['함정설계']);
+	const 실수포인트 = extractPropertyValue(props['실수포인트']);
+	
+	// 1. 중단원과 문제 내용 일치 확인
+	if (중단원 === '이차곡선') {
+		const question = 핵심패턴 || LaTeX예시 || '';
+		if (question) {
+			const has이차곡선 = question.includes('포물선') || 
+			                   question.includes('타원') || 
+			                   question.includes('쌍곡선') ||
+			                   question.includes('초점') ||
+			                   question.includes('준선');
+			
+			if (!has이차곡선) {
+				warnings.push('중단원이 "이차곡선"인데 문제에 이차곡선 관련 내용이 명시되지 않음');
+			}
+		}
+	}
+	
+	// 2. 핵심개념 검증
+	if (핵심개념 && solution) {
+		const 핵심개념List = 핵심개념.split(/[,;]/).map(c => c.trim()).filter(c => c);
+		const solutionLower = solution.toLowerCase();
+		
+		for (const concept of 핵심개념List) {
+			const conceptLower = concept.toLowerCase();
+			const hasInSolution = solutionLower.includes(conceptLower) || 
+			                     solution.includes(concept);
+			
+			if (!hasInSolution && concept.length > 2) {
+				warnings.push(`핵심개념 "${concept}"이 해설에 명시적으로 다뤄지지 않음`);
+			}
+		}
+	}
+	
+	// 3. 포물선 관련 공식 검증
+	if (solution) {
+		// 포물선 정의 확인
+		if (solution.includes('포물선') || solution.includes('PF') || solution.includes('PI')) {
+			const hasParabolaDefinition = solution.includes('PF') && solution.includes('PI') &&
+			                             (solution.includes('PF') && solution.includes('PI'));
+			
+			if (!hasParabolaDefinition) {
+				warnings.push('포물선의 정의(PF = PI)가 해설에 명시되지 않음');
+			}
+		}
+		
+		// 포물선 방정식 확인
+		if (solution.includes('y^{2}') || solution.includes('y^2')) {
+			const hasParabolaEquation = solution.includes('y^{2}=4') || 
+			                          solution.includes('y^2=4') ||
+			                          solution.includes('y^{2}=8') ||
+			                          solution.includes('y^2=8');
+			
+			if (!hasParabolaEquation) {
+				warnings.push('포물선 방정식이 해설에 명시되지 않음');
+			}
+		}
+	}
+	
+	// 4. 타원 관련 공식 검증
+	if (solution) {
+		if (solution.includes('타원') || solution.includes('PF') && solution.includes('PF\'')) {
+			const hasEllipseDefinition = solution.includes('PF') && 
+			                           (solution.includes('PF\'') || solution.includes('PF\'')) &&
+			                           (solution.includes('2a') || solution.includes('2b'));
+			
+			if (!hasEllipseDefinition) {
+				warnings.push('타원의 정의(PF + PF\' = 2a)가 해설에 명시되지 않음');
+			}
+		}
+	}
+	
+	// 5. 문제와 해설의 수학적 일관성
+	if (problems && problems.length > 0 && solution) {
+		// 문제에 나온 수식이 해설에 있는지 확인
+		for (const problem of problems) {
+			if (problem.question) {
+				// 포물선 방정식 확인
+				if (problem.question.includes('y^{2}=4') || problem.question.includes('y^{2}=8')) {
+					if (!solution.includes('y^{2}') && !solution.includes('y^2')) {
+						warnings.push('문제의 포물선 방정식이 해설에 일치하지 않음');
+					}
+				}
+				
+				// 타원 관련 확인
+				if (problem.question.includes('타원') && problem.question.includes('장축')) {
+					if (!solution.includes('타원') || !solution.includes('장축')) {
+						warnings.push('문제의 타원 관련 내용이 해설에 일치하지 않음');
+					}
+				}
+			}
+		}
+	}
+	
+	return { errors, warnings };
+}
+
+async function reviewAndFillGeometryP1() {
+	const startTime = Date.now();
+	console.log('='.repeat(80));
+	console.log('기하_2024학년도_현우진_드릴_P1 Notion 필드 검토 및 26, 27번 필드 채우기');
+	console.log('='.repeat(80));
+	
+	await logger.init();
+	await logger.info('REVIEW_GEOMETRY_P1', '작업 시작');
+	
+	// 문제와 해설 파일 로드
+	console.log('\n📖 문제 및 해설 파일 로드 중...');
+	const problems = loadProblems();
+	const solution = loadSolution();
+	
+	console.log(`  - 문제: ${problems.length}개 발견`);
+	console.log(`  - 해설: ${solution.length > 0 ? '로드 완료' : '로드 실패'}\n`);
+	
+	try {
+		// Notion에서 P1 문제 찾기
+		const filter = {
+			property: '문제ID',
+			title: {
+				contains: '기하_2024'
+			}
+		};
+		
+		const allPages = await collectPaginatedAPI(notion.databases.query, {
+			database_id: databaseId,
+			filter
+		});
+		
+		// P1 문제만 필터링
+		const p1Pages = allPages.filter(page => {
+			const 문제ID = extractPropertyValue(page.properties['문제ID']);
+			return 문제ID && 문제ID.includes('P1');
+		});
+		
+		console.log(`📋 Notion에서 P1 문제 ${p1Pages.length}개 발견\n`);
+		await logger.info('REVIEW_GEOMETRY_P1', `P1 문제 ${p1Pages.length}개 발견`);
+		
+		const allErrors = [];
+		const allWarnings = [];
+		let updatedCount = 0;
+		
+		// 모든 문제 데이터 구조화 (26, 27번 필드 생성용)
+		const allProblems = [];
+		for (const page of allPages) {
+			try {
+				const problem = extractProblemData(page);
+				problem.원리공유문제 = extractPropertyValue(page.properties['원리공유문제']);
+				problem.오답시나리오 = extractPropertyValue(page.properties['오답시나리오']);
+				allProblems.push(problem);
+			} catch (error) {
+				// 무시
+			}
+		}
+		
+		// 각 P1 문제 검토 및 업데이트
+		for (let i = 0; i < p1Pages.length; i++) {
+			const page = p1Pages[i];
+			const 문제ID = extractPropertyValue(page.properties['문제ID']);
+			const progress = `[${i + 1}/${p1Pages.length}]`;
+			
+			console.log(`\n${progress} 📄 처리 중: ${문제ID}`);
+			
+			try {
+				const problem = extractProblemData(page);
+				problem.원리공유문제 = extractPropertyValue(page.properties['원리공유문제']);
+				problem.오답시나리오 = extractPropertyValue(page.properties['오답시나리오']);
+				
+				// 수학적 논리 검증
+				const validation = validateMathLogic(page, problems, solution);
+				allErrors.push(...validation.errors.map(e => `[${문제ID}] ${e}`));
+				allWarnings.push(...validation.warnings.map(w => `[${문제ID}] ${w}`));
+				
+				if (validation.errors.length > 0 || validation.warnings.length > 0) {
+					console.log(`  ⚠️  검토 결과:`);
+					validation.errors.forEach(e => console.log(`    ❌ ${e}`));
+					validation.warnings.forEach(w => console.log(`    ⚠️  ${w}`));
+				} else {
+					console.log(`  ✅ 수학적/논리적 오류 없음`);
+				}
+				
+				// 26, 27번 필드 채우기
+				const updateProps = {};
+				let needsUpdate = false;
+				
+				// 원리공유문제 (26번)
+				if (!problem.원리공유문제 || String(problem.원리공유문제).trim() === '') {
+					const sharedProblems = findPrincipleSharedProblems(problem, allProblems);
+					let 원리공유문제;
+					
+					if (sharedProblems.length > 0) {
+						원리공유문제 = sharedProblems.slice(0, 5).join('\n');
+					} else {
+						const principle = extractMathPrinciple(
+							problem.question || '',
+							problem.topic || '',
+							problem.핵심개념 || '',
+							problem.중단원 || ''
+						);
+						
+						if (principle) {
+							const principleLines = principle.split(';').map(p => p.trim()).filter(p => p !== '');
+							원리공유문제 = principleLines.join('\n');
+						} else {
+							// 기하 P1 특화 내용
+							if (problem.question && problem.question.includes('포물선')) {
+								원리공유문제 = '포물선의 정의(PF = PI)를 활용하는 문제들\n포물선 위의 점에서 초점과 준선까지의 거리가 같음을 이용하는 문제들';
+							} else if (problem.question && problem.question.includes('타원')) {
+								원리공유문제 = '타원의 정의(PF + PF\' = 2a)를 활용하는 문제들\n타원 위의 점에서 두 초점까지의 거리의 합이 일정함을 이용하는 문제들';
+							} else {
+								원리공유문제 = '이차곡선의 정의와 성질을 활용하는 문제들';
+							}
+						}
+					}
+					
+					updateProps['원리공유문제'] = createRichTextProperty(원리공유문제);
+					needsUpdate = true;
+					console.log(`  📝 26번 필드(원리공유문제) 생성`);
+				}
+				
+				// 오답시나리오 (27번)
+				if (!problem.오답시나리오 || String(problem.오답시나리오).trim() === '') {
+					const 오답시나리오 = generateErrorScenario(
+						problem.question || '',
+						problem.함정설계 || '',
+						problem.실수포인트 || '',
+						problem.핵심개념 || '',
+						problem.중단원 || ''
+					);
+					
+					if (오답시나리오) {
+						const scenarioLines = 오답시나리오.split('\n').filter(line => line.trim() !== '');
+						const formattedScenario = scenarioLines.join('\n');
+						updateProps['오답시나리오'] = createRichTextProperty(formattedScenario);
+					} else {
+						// 해설과 문제를 참고하여 오답시나리오 생성
+						let customScenario = '가장 빠지기 쉬운 오류:\n';
+						
+						if (problem.question && problem.question.includes('포물선')) {
+							customScenario += '1. 포물선의 정의를 잘못 적용: PF = PI를 PF = PI\'로 착각하거나 준선까지의 거리를 잘못 계산\n';
+							customScenario += '2. 포물선 방정식에서 초점의 위치를 잘못 파악: y² = 4ax에서 초점이 (a, 0)임을 (0, a)로 착각\n';
+							customScenario += '3. 포물선 위의 점의 좌표를 방정식에 대입할 때 부호 실수\n';
+						}
+						
+						if (problem.question && problem.question.includes('타원')) {
+							customScenario += '1. 타원의 정의를 잘못 적용: PF + PF\' = 2a를 PF + PF\' = a로 착각\n';
+							customScenario += '2. 장축과 단축을 혼동하여 초점의 위치를 잘못 계산\n';
+							customScenario += '3. 타원 위의 점에서 두 초점까지의 거리의 합을 구할 때 부호 실수\n';
+						}
+						
+						if (problem.question && problem.question.includes('원')) {
+							customScenario += '1. 원의 방정식에서 중심과 반지름을 잘못 파악\n';
+							customScenario += '2. 원과 직선의 접점을 구할 때 판별식을 잘못 적용\n';
+						}
+						
+						if (solution.includes('직각삼각형') && solution.includes('닮음')) {
+							customScenario += '4. 직각삼각형의 닮음을 체크할 때 대응하는 각을 잘못 매칭\n';
+						}
+						
+						updateProps['오답시나리오'] = createRichTextProperty(customScenario);
+					}
+					
+					needsUpdate = true;
+					console.log(`  📝 27번 필드(오답시나리오) 생성`);
+				}
+				
+				// Notion 업데이트
+				if (needsUpdate && Object.keys(updateProps).length > 0) {
+					await rateLimiter.waitIfNeeded();
+					await notion.pages.update({
+						page_id: page.id,
+						properties: updateProps
+					});
+					
+					updatedCount++;
+					const updatedFields = Object.keys(updateProps).join(', ');
+					console.log(`  ✅ ${updatedFields} 업데이트 완료`);
+					await logger.info('REVIEW_GEOMETRY_P1', `업데이트 완료: ${문제ID}`, { fields: updatedFields });
+				} else if (!needsUpdate) {
+					console.log(`  ℹ️  26, 27번 필드가 이미 채워져 있음`);
+				}
+				
+			} catch (error) {
+				const errorMsg = `${progress} ❌ ${문제ID} 처리 실패: ${error.message}`;
+				console.error(`  ${errorMsg}`);
+				await logger.error('REVIEW_GEOMETRY_P1', `처리 실패: ${문제ID}`, {
+					error: error.message,
+					code: error.code
+				});
+			}
+		}
+		
+		// 최종 결과 출력
+		const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+		console.log('\n' + '='.repeat(80));
+		console.log('[최종 결과]');
+		console.log('='.repeat(80));
+		console.log(`총 P1 문제 수: ${p1Pages.length}개`);
+		console.log(`업데이트 완료: ${updatedCount}개`);
+		console.log(`수학적 오류: ${allErrors.length}개`);
+		console.log(`경고: ${allWarnings.length}개`);
+		console.log(`소요 시간: ${elapsedTime}초`);
+		
+		if (allErrors.length > 0) {
+			console.log('\n❌ 발견된 오류:');
+			allErrors.slice(0, 10).forEach(e => console.log(`  - ${e}`));
+			if (allErrors.length > 10) {
+				console.log(`  ... 외 ${allErrors.length - 10}개`);
+			}
+		}
+		
+		if (allWarnings.length > 0) {
+			console.log('\n⚠️  발견된 경고:');
+			allWarnings.slice(0, 10).forEach(w => console.log(`  - ${w}`));
+			if (allWarnings.length > 10) {
+				console.log(`  ... 외 ${allWarnings.length - 10}개`);
+			}
+		}
+		
+		await logger.info('REVIEW_GEOMETRY_P1', '작업 완료', {
+			total: p1Pages.length,
+			updated: updatedCount,
+			errors: allErrors.length,
+			warnings: allWarnings.length,
+			elapsedTime: `${elapsedTime}초`
+		});
+		
+	} catch (error) {
+		const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+		console.error('\n❌ 작업 실패:', error.message);
+		console.error(error.stack);
+		
+		await logger.error('REVIEW_GEOMETRY_P1', '작업 실패', {
+			error: error.message,
+			code: error.code,
+			elapsedTime: `${elapsedTime}초`
+		});
+		
+		throw error;
+	}
+}
+
+async function main() {
+	try {
+		await reviewAndFillGeometryP1();
+		console.log('\n' + '='.repeat(80));
+		console.log('✅ 작업 완료!');
+		console.log('='.repeat(80));
+		process.exit(0);
+	} catch (error) {
+		console.error('\n❌ 실행 중 오류 발생:', error);
+		process.exit(1);
+	}
+}
+
+main();

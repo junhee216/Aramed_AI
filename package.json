@@ -1,0 +1,24 @@
+{
+  "name": "notion-page-connector",
+  "version": "1.0.0",
+  "description": "Notion 페이지를 웹에 연결하는 프로젝트",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "notion",
+    "api",
+    "integration"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "^2.2.10",
+    "csv-parser": "^3.2.0",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^16.6.1"
+  },
+  "type": "module"
+}
